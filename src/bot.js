@@ -17,6 +17,8 @@ const { getUserById,
     setUserComment,
     getFormattedLogs,
     getOpenOperationsByUser,
+    addStaff,
+    updateUserName,
    } = require('./service.js');
 
     const { exportReportToExcel } = require('./exporter.js'); // Импортируем функцию экспорта
@@ -45,11 +47,11 @@ bot.onText(/\/start/, async (msg) => {
   if (!user) {
     await addUser(chatId, userName);
     await setUserMenuLevel(chatId, 1); // Устанавливаем начальный уровень меню
-    bot.sendMessage(chatId, "Добро пожаловать! Пожалуйста, выберите сотрудника.", getButtonOptions([["Выбор сотрудника"],["Открытые операции"],["Экспорт отчета"]]));
+    bot.sendMessage(chatId, "Добро пожаловать! Пожалуйста, выберите сотрудника.", getButtonOptions([["Выбор сотрудника"],["Открытые операции"],["Экспорт отчета"], ...user.role === "admin" ? [["Добавить сотрудника"],["Зарегестрировать пользователя"]] : []]));
   } else {
     // Если пользователь уже существует
     await setUserMenuLevel(chatId, 1);
-    bot.sendMessage(chatId, "Вы уже зарегистрированы. Пожалуйста, выберите сотрудника.", getButtonOptions([["Выбор сотрудника"],["Открытые операции"],["Экспорт отчета"]]));
+    bot.sendMessage(chatId, "Вы уже зарегистрированы. Пожалуйста, выберите сотрудника.", getButtonOptions([["Выбор сотрудника"],["Открытые операции"],["Экспорт отчета"], ...user.role === "admin" ? [["Добавить сотрудника"],["Зарегестрировать пользователя"]] : []]));
   }
 });
 
@@ -66,8 +68,9 @@ bot.on('message', async (msg) => {
   }
 
   const userMenuLevel = user.menu_level;
+  const userRole = user.role;
 
-  console.log({userMenuLevel});
+  console.log({userMenuLevel, userRole});
 
   switch (userMenuLevel) {
     case 1:
@@ -89,6 +92,12 @@ bot.on('message', async (msg) => {
         }else{
           bot.sendMessage(chatId, "У вас нет открытых операций.");
         }
+      } else if (msg.text === "Добавить сотрудника" && user.role === "admin") {
+        await setUserMenuLevel(chatId, 7);
+        bot.sendMessage(chatId, "Введите login и ФИО сотрудника.\nПример: EVM Ефремов Виктор Михайлович");
+      } else if (msg.text === "Зарегестрировать пользователя" && user.role === "admin") {
+        await setUserMenuLevel(chatId, 8);
+        bot.sendMessage(chatId, "Введите telegramId и ФИО поользователя.\nПример: 123456789 Семенов Семен Семенович");
       }
       break;
     case 2:
@@ -137,7 +146,7 @@ bot.on('message', async (msg) => {
           console.log({activeOp});
           const operation = await getOperationById(activeOp.operations_id);
           console.log({operation});
-          bot.sendMessage(chatId, `Операция: ${operation?.name}`, {
+          bot.sendMessage(chatId, `Операция: ${operation.name}`, {
             reply_markup: {
               keyboard: buttons,
               resize_keyboard: true,
@@ -200,9 +209,52 @@ bot.on('message', async (msg) => {
             await promptForDateTime(chatId, false);
         }
         break;
+    case 7:
+        // Регулярное выражение для поиска символа и имени сотрудника
+        const staffStr = msg.text;
+        const staffRegex = /^([A-Z0-9-]+)\s+(.+)$/;
+        const staffMatch = staffStr.match(staffRegex);
+        if (staffMatch) {
+          const login = staffMatch[1];
+          const fullName = staffMatch[2];
+          console.log({ login, fullName });
+          const existStaff = await getStaff(login);
+          if (existStaff) {
+            bot.sendMessage(chatId, `Сотрудник с таким login уже существует: "${existStaff.login} ${existStaff.name}". Пожалуйста, введите снова.`);
+            break;
+          }
 
+          await addStaff(login, fullName);
+          await setUserMenuLevel(chatId, 1);
+          bot.sendMessage(chatId, "Сотрудник успешно добавлен.", getButtonOptions([["Выбор сотрудника"],["Открытые операции"],["Экспорт отчета"],["Добавить сотрудника"]]));
+        } else {
+          bot.sendMessage(chatId, "Неудалось распознать символ и имя сотрудника. Пожалуйста, введите их в формате 'EVM Ефремов Виктор Михайлович'");
+        }
+        break;
+    case 8:
+        const userStr = msg.text;
+        const userRegex = /^([0-9]+)\s+(.+)$/;
+        const userMatch = userStr.match(userRegex);
+        if (userMatch) {
+          const telegramId = userMatch[1];
+          const fio = userMatch[2];
+          console.log({ telegramId, fio });
+          const existUser = await getUserById(telegramId);
+          if (existUser) {
+            await updateUserName(existUser.id, fio);
+            await setUserMenuLevel(chatId, 1);
+            bot.sendMessage(chatId, "Пользователь успешно обновлен.", getButtonOptions([["Выбор сотрудника"],["Открытые операции"],["Экспорт отчета"],["Добавить сотрудника"],["Зарегестрировать пользователя"]]));
+          } else {
+            await addUser(telegramId, fio);
+            await setUserMenuLevel(chatId, 1);
+            bot.sendMessage(chatId, "Пользователь успешно добавлен.", getButtonOptions([["Выбор сотрудника"],["Открытые операции"],["Экспорт отчета"],["Добавить сотрудника"],["Зарегестрировать пользователя"]]));
+          }
+        } else {
+          bot.sendMessage(chatId, "Неудалось распознать telegramId и имя пользователя. Пожалуйста, введите их в формате '123456789 Семенов Семен Семенович'");
+        }
+        break;
     default:
-      bot.sendMessage(chatId, "Неизвестный уровень меню. Пожалуйста, начните с /start.");
+      bot.sendMessage(chatId, "Неизвестный уровень меню. Пожалуйста, начните c /start.");
   }
 });
 

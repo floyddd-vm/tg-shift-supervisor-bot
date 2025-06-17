@@ -12,8 +12,16 @@ module.exports = {
     return rows[0];
   },
 
+  updateUserName(id, fio) {
+    return db.promise().query('UPDATE users SET fio = ? WHERE id = ?', [fio, id]);
+  },
+
   addUser: async (id, name) => {
     await db.promise().query('INSERT INTO users (id, name) VALUES (?, ?)', [id, name]);
+  },
+
+  addStaff: async (login, name) => {
+    await db.promise().query('INSERT INTO staff (login, name) VALUES (?, ?)', [login, name]);
   },
 
   setUserMenuLevel: async (id, level) => {
