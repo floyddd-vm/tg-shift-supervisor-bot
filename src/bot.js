@@ -246,6 +246,7 @@ bot.on('message', async (msg) => {
             bot.sendMessage(chatId, "Пользователь успешно обновлен.", getButtonOptions([["Выбор сотрудника"],["Открытые операции"],["Экспорт отчета"],["Добавить сотрудника"],["Зарегестрировать пользователя"]]));
           } else {
             await addUser(telegramId, fio);
+            await updateUserName(telegramId, fio);
             await setUserMenuLevel(chatId, 1);
             bot.sendMessage(chatId, "Пользователь успешно добавлен.", getButtonOptions([["Выбор сотрудника"],["Открытые операции"],["Экспорт отчета"],["Добавить сотрудника"],["Зарегестрировать пользователя"]]));
           }
