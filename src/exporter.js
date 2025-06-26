@@ -13,6 +13,7 @@ const exportReportToExcel = async (data, chatId, bot) => {
     worksheet.columns = [
       { header: 'ФИО', key: 'fio', width: 30 },
       { header: 'Сотрудник', key: 'staff_name', width: 30 },
+      { header: 'Оператор', key: 'staff_login', width: 15 },
       { header: 'Операция', key: 'operation_name', width: 30 },
       { header: 'Комментарий', key: 'comment', width: 50 },
       { header: 'Дата начала', key: 'start_at', width: 20 },
@@ -27,6 +28,7 @@ const exportReportToExcel = async (data, chatId, bot) => {
       worksheet.addRow({
         fio: row.fio,
         staff_name: row.staff_name,
+        staff_login: row.staff_login,
         operation_name: row.operation_name,
         comment: row.comment,
         start_at: row.start_at?.toLocaleString('ru-RU'),
