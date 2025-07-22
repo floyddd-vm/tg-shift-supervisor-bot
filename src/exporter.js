@@ -31,10 +31,10 @@ const exportReportToExcel = async (data, chatId, bot) => {
         staff_login: row.staff_login,
         operation_name: row.operation_name,
         comment: row.comment,
-        start_at: row.start_at?.toLocaleString('ru-RU'),
-        finish_at: row.finish_at?.toLocaleString('ru-RU'),
-        created_at: row.created_at.toLocaleString('ru-RU'),
-        updated_at: row.updated_at.toLocaleString('ru-RU'),
+        start_at: row.start_at?.toLocaleString('ru-RU', {timeZone: 'Europe/Moscow'}),
+        finish_at: row.finish_at?.toLocaleString('ru-RU', {timeZone: 'Europe/Moscow'}),
+        created_at: row.created_at.toLocaleString('ru-RU', {timeZone: 'Europe/Moscow'}),
+        updated_at: row.updated_at.toLocaleString('ru-RU', {timeZone: 'Europe/Moscow'}),
       });
     });
 

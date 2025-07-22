@@ -260,7 +260,7 @@ bot.on('message', async (msg) => {
 });
 
 const startOperationWithCurrentTime = async (chatId, staffId, operationId, comment) => {
-  const startTime = new Date();
+  const startTime = getUTCDate(new Date());
   await createLog(chatId, staffId, operationId, comment, startTime);
 
   await setUserMenuLevel(chatId, 1);
@@ -276,7 +276,7 @@ const finishOperationWithCurrentTime = async (chatId, staffId) => {
   const activeOp = await getActiveOperation(staffId);
   let msg = "Нет активных операций для завершения."
   if (activeOp) {
-    const finishTime = new Date();
+    const finishTime = getUTCDate(new Date());
     await updateLogFinishTime(activeOp.id, finishTime);
     msg = "Операция завершена.";
     
@@ -291,10 +291,10 @@ const finishOperationWithCurrentTime = async (chatId, staffId) => {
 
 // Функция для запроса даты и времени через кнопки
 const promptForDateTime = (chatId, isFinish = false) => {
-  const today = new Date();
+  const today = getUTCDate(new Date());
   const dateButtons = [
-    [{ text: `Сегодня (${today.toLocaleDateString("ru-RU")})` }],
-    [{ text: `Вчера (${new Date(today.setDate(today.getDate() - 1)).toLocaleDateString("ru-RU")})` }],
+    [{ text: `Сегодня (${today.toLocaleDateString("ru-RU", {timeZone: 'Europe/Moscow'})})` }],
+    [{ text: `Вчера (${new Date(today.setDate(today.getDate() - 1)).toLocaleDateString("ru-RU", {timeZone: 'Europe/Moscow'})})` }],
   ];
   const msg = isFinish ? "Выберите дату для завершения операции:" : "Выберите дату начала операции:";
 
@@ -344,6 +344,9 @@ const promptForTime = (chatId, selectedDate, isFinish) => {
     const selectedTime = msg.text;
     const [hours, minutes] = selectedTime.split(':');
     selectedDate.setHours(hours, minutes);
+
+    selectedDate.setHours(selectedDate.getHours() - 3);
+
     if (isFinish) {
         await finishOperationWithTime(chatId, selectedDate);
     } else {
@@ -360,7 +363,7 @@ const finishOperationWithTime = async (chatId, selectedDate) => {
   if (activeOp) {
     await updateLogFinishTime(activeOp.id, selectedDate);
     
-    msg = `Операция завершена в ${selectedDate.toLocaleString("ru-RU")}`;
+    msg = `Операция завершена в ${selectedDate.toLocaleString("ru-RU", {timeZone: 'Europe/Moscow'})}`;
   } 
   await setUserMenuLevel(chatId, 1);
   await setUserStaffId(chatId, null);
@@ -378,5 +381,13 @@ const startOperationWithTime = async (chatId, selectedDate) => {
   await setUserOperationId(chatId, null);
   await setUserComment(chatId, null);
 
-  bot.sendMessage(chatId, `Операция начата ${selectedDate.toLocaleString("ru-RU")}.`, getButtonOptions([["Выбор сотрудника"],["Открытые операции"],["Экспорт отчета"]]));
+  bot.sendMessage(chatId, `Операция начата ${selectedDate.toLocaleString("ru-RU", {timeZone: 'Europe/Moscow'})}.`, getButtonOptions([["Выбор сотрудника"],["Открытые операции"],["Экспорт отчета"]]));
 };
+
+
+const getUTCDate = (localDate) => {
+  const utcDate = new Date(localDate.getUTCFullYear(), localDate.getUTCMonth(), localDate.getUTCDate(), 
+                         localDate.getUTCHours(), localDate.getUTCMinutes(), localDate.getUTCSeconds());
+
+  return utcDate;
+}

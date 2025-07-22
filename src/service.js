@@ -92,8 +92,8 @@ module.exports = {
         logs.comment, 
         start_at, 
         finish_at, 
-        CONVERT_TZ(created_at, \'+00:00\', \'+03:00\') AS created_at, 
-        CONVERT_TZ(updated_at, \'+00:00\', \'+03:00\') AS updated_at  
+        created_at, 
+        updated_at  
         
         from 
         logs left join operations o on o.id = logs.operations_id 
