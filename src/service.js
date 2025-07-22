@@ -87,6 +87,7 @@ module.exports = {
         SELECT 
         u.fio, 
         s.name as staff_name, 
+        s.login as staff_login, 
         o.name as operation_name, 
         logs.comment, 
         start_at, 
