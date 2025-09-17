@@ -382,10 +382,10 @@ const parseTime = async (chatId, userData, isFinish, msg) => {
     const timeRegex = /^([0-9]+):([0-9]+)$/;
     const timeMatch = timeRegex.exec(selectedTime);
     if (timeMatch) {
-      const hours = Number(timeMatch[1]);
+      const hours = Number(timeMatch[1]) - 3; // UTC +3 to UTC 0
       const minutes = Number(timeMatch[2]);
       const selectedDate = new Date(userData.date);
-      selectedDate.setHours(hours, minutes, 0);
+      selectedDate.setUTCHours(hours, minutes, 0);
 
       if (isFinish) {
           await finishOperationWithTime(chatId, selectedDate);
@@ -398,7 +398,7 @@ const parseTime = async (chatId, userData, isFinish, msg) => {
     }
 }
 
-
+/*
 // Функция для запроса даты и времени через кнопки
 const promptForDateTime = (chatId, isFinish = false) => {
   const today = getUTCDate(new Date());
@@ -464,7 +464,7 @@ const promptForTime = (chatId, selectedDate, isFinish) => {
     }
   });
 };
-
+*/
 // Функция для завершения операции с заданным временем
 const finishOperationWithTime = async (chatId, selectedDate) => {
   const user = await getUserById(chatId);
