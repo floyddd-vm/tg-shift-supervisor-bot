@@ -3,8 +3,11 @@ const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
+  database: process.env.DB_NAME,
+  timezone: 'Z'
 });
+
+db.query("SET time_zone = '+00:00'");
 
 module.exports = {
   getUserById: async (id) => {
@@ -38,6 +41,24 @@ module.exports = {
 
   setUserOperationId : async (id, operationId) => {
     await db.promise().query('UPDATE users SET operation_id = ? WHERE id = ?', [operationId, id]);
+  },
+
+  setUserData : async (id, data) => {
+    await db.promise().query(
+      `UPDATE users
+      SET data = JSON_MERGE_PATCH(
+        COALESCE(data, JSON_OBJECT()),
+        CAST(? AS JSON)
+      )
+      WHERE id = ?
+      `,
+      [JSON.stringify(data), id]
+  );
+  },
+
+  getUserData: async (id) => {
+    const [rows] = await db.promise().query('SELECT * FROM users WHERE id = ?', [id]);
+    return rows[0];
   },
 
   setUserComment: async (id, comment) => {
