@@ -44,19 +44,20 @@ const exportReportToExcel = async (data, chatId, bot) => {
     await workbook.xlsx.writeFile(filePath);
 
     console.log('end exportReportToExcel');
-    // Отправляем файл пользователю
+
     await bot.sendDocument(
       chatId,
+      filePath,
+      {},
       {
-        source: fs.createReadStream(filePath),
         filename: "report.xlsx",
         contentType:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "application/vnd.ms-excel",
       },
     );
 
     // Удаляем файл после отправки
-    fs.unlinkSync(filePath);
+    //fs.unlinkSync(filePath);
   } catch (error) {
     console.error('Ошибка при экспорте отчета:', error);
     await bot.sendMessage(chatId, "Произошла ошибка при создании отчета.");
