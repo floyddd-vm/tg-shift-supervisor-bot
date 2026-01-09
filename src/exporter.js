@@ -5,6 +5,7 @@ const path = require('path');
 // Функция для экспорта отчета в Excel
 const exportReportToExcel = async (data, chatId, bot) => {
   try {
+    console.log('start exportReportToExcel');
     // Создаем новый Excel файл
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Отчет');
@@ -24,7 +25,7 @@ const exportReportToExcel = async (data, chatId, bot) => {
 
     // Добавляем строки данных
     data.forEach(row => {
-      console.log({row});
+      //console.log({row});
       worksheet.addRow({
         fio: row.fio,
         staff_name: row.staff_name,
@@ -42,8 +43,17 @@ const exportReportToExcel = async (data, chatId, bot) => {
     const filePath = path.join(__dirname, 'report.xlsx');
     await workbook.xlsx.writeFile(filePath);
 
+    console.log('end exportReportToExcel');
     // Отправляем файл пользователю
-    await bot.sendDocument(chatId, filePath);
+    await bot.sendDocument(
+      chatId,
+      {
+        source: fs.createReadStream(filePath),
+        filename: "report.xlsx",
+        contentType:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      },
+    );
 
     // Удаляем файл после отправки
     fs.unlinkSync(filePath);
