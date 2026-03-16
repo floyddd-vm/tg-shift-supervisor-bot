@@ -43,6 +43,9 @@ const exportReportToExcel = async (data, chatId, bot) => {
     const filePath = path.join(__dirname, 'report.xlsx');
     await workbook.xlsx.writeFile(filePath);
 
+    //save to file
+    fs.writeFileSync(filePath, workbook.xlsx.write());
+
     console.log('end exportReportToExcel');
 
     await bot.sendDocument(
