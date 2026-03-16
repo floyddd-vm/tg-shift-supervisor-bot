@@ -49,8 +49,8 @@ const exportReportToExcel = async (data, chatId, bot) => {
   try {
     console.log('start exportReportToExcel');
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileName = report_${timestamp}.xlsx;
+    const reportTimestamp = new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-');
+    const fileName = `report_${reportTimestamp}.xlsx`;
     const filePath = path.join(REPORTS_DIR, fileName);
 
     await saveReportToExcel(data, filePath);
